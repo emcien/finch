@@ -46,23 +46,28 @@ module Finch
       @_connection ||= Faraday.new('https://api.twitter.com')
     end
 
+    def auth_headers method, uri, params, credentials
+      SimpleOAuth::Header.new(method, uri, params, credentials).to_s
+    rescue
+      raise Finch::Error::AuthenticationError
+    end
+
     def request method, path, params={}, options={}
       version   = options[:version] || 1.1
       uri       = "https://api.twitter.com/#{version}/#{path}.json"
-      auth      = SimpleOAuth::Header.new(method, uri, params, @user.credentials).to_s
+      auth      = auth_headers method, uri, params, @user.credentials
       @response = connection.run_request(method, uri, nil, authorization: auth) do |request|
-        request.params.update(params)
+        request.params.update params
       end
 
-      check_rate_limit(response_headers) unless @rate_limit.nil?
+      raise Finch::Error[response_status] unless response_status == 200
+      check_rate_limit(response_headers) if @rate_limit.respond_to?(:call)
 
       Oj.load @response.body
     end
     use_cursor :request
 
     def check_rate_limit headers
-      raise 'Rate limit handler not set' unless @rate_limit.respond_to?(:call)
-
       remaining, total = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i
       @rate_limit.call(remaining, total, @user)
     end

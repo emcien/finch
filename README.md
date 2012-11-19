@@ -7,11 +7,31 @@ primarily to provide the following features:
 As opposed to the standard `twitter` gem, finch makes no attempt to expose a
 stable ruby API, nor to be backwards-compatible with Twitter 1.0.
 
+USAGE:
+
+This assumes `user` is an object with a `credentials` hash with the following keys:
+`:token`, `:token_secret`, `:consumer_key`, `:consumer_secret`. See the [Twitter docs](https://dev.twitter.com/docs/auth/implementing-sign-twitter) for more information on obtaining these keys.
+
+Initializing the client:
+
+    client = Finch[user]
+
+Making a query:
+
+    client.get 'search/tweets', q: 'Emcien'
+
+Handling rate limits:
+
+    client.rate_limit do |rem, tot, user|
+      if rem.to_f / tot < 0.5
+        user.warn "You have used half of your rate limit for this endpoint"
+      end
+    end
+
 TESTING:
 In order to run tests, you must be able to authenticate a Twitter user. Copy spec/credentials.json.tmp to spec/credentials.json and fill in the required fields.
 
 TODO:
-- error handling
 - write specs
 - add tools for exposing Faraday builder / response as needed
   - use VCR for testing once a Faraday builder is exposed
