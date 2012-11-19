@@ -21,7 +21,7 @@ module Finch
     class AuthenticationError < Client; end
 
     def self.[] status
-      name = RESPONSE_CODES[status] || 'Unexpected Error'
+      name = RESPONSE_CODES[status].gsub(/\s+/, '') || 'UnexpectedError'
       base = if 400 <= status && status < 500
         Client 
       elsif 500 <= status && status < 600
@@ -29,8 +29,9 @@ module Finch
       else
         Error
       end
-      klass = Finch::Error.const_set(name.gsub(/\s+/, ''), Class.new(base))
-      raise klass.new("#{name} (#{status})")
+      klass = "Finch::Error::#{name}".constantize rescue 
+        Finch::Error.const_set(name, Class.new(base))
+      raise klass.new "#{name} (#{status})"
     end
   end
 
