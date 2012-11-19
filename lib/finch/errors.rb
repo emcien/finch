@@ -18,11 +18,7 @@ module Finch
     class Client < Error; end
     class Server < Error; end
 
-    class AuthenticationError < Client
-      def message
-        "Unable to sign OAuth request. Please verify your credentials."
-      end
-    end
+    class AuthenticationError < Client; end
 
     def self.[] status
       name = RESPONSE_CODES[status] || 'Unexpected Error'

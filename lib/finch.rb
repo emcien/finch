@@ -4,7 +4,6 @@ require 'simple_oauth'
 
 require 'finch/cursor'
 require 'finch/errors'
-require 'finch/utils'
 
 module Finch
 
@@ -16,8 +15,13 @@ module Finch
     include Cursor
 
     def initialize user
-      raise Finch::Error::InvalidUser unless user.respond_to?(:credentials)
-      @user = user
+      @user        = user
+      @credentials = user.credentials
+      %w{ token token_secret consumer_key consumer_secret }.each do |key|
+        raise unless @credentials[key.to_sym].present?
+      end
+    rescue
+      raise Finch::Error::AuthenticationError.new 'Malformed user credentials.'
     end
 
     def rate_limit &block
@@ -46,16 +50,16 @@ module Finch
       @_connection ||= Faraday.new('https://api.twitter.com')
     end
 
-    def auth_headers method, uri, params, credentials
-      SimpleOAuth::Header.new(method, uri, params, credentials).to_s
+    def auth_headers method, uri, params
+      SimpleOAuth::Header.new(method, uri, params, @credentials).to_s
     rescue
-      raise Finch::Error::AuthenticationError
+      raise Finch::Error::AuthenticationError.new 'Unable to sign OAuth request. Please verify your credentials'
     end
 
     def request method, path, params={}, options={}
       version   = options[:version] || 1.1
       uri       = "https://api.twitter.com/#{version}/#{path}.json"
-      auth      = auth_headers method, uri, params, @user.credentials
+      auth      = auth_headers method, uri, params
       @response = connection.run_request(method, uri, nil, authorization: auth) do |request|
         request.params.update params
       end
