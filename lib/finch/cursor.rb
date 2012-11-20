@@ -5,7 +5,7 @@ require 'finch/utils'
 module Cursor
 
   module ClassMethods
-    def use_cursor method
+    def use_cursor
       alias_method :request_without_cursor, :request
       alias_method :request, :request_with_cursor
     end

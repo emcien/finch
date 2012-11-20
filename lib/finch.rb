@@ -69,7 +69,7 @@ module Finch
 
       Oj.load @response.body
     end
-    use_cursor :request
+    use_cursor
 
     def check_rate_limit headers
       remaining, total = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i
