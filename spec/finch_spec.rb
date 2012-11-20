@@ -28,8 +28,6 @@ describe Finch do
 
     @finch.get('search/tweets', :q => 'ruby')
     called.should be true
-    require 'pry'
-    binding.pry
   end
 
 end
