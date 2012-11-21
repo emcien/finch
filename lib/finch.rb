@@ -72,6 +72,7 @@ module Finch
     use_cursor
 
     def check_rate_limit headers
+      return unless headers.include? 'x-rate-limit-remaining'
       remaining, total = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i
       @rate_limit.call(remaining, total, @user)
     end
