@@ -16,7 +16,7 @@ module Cursor
   end
 
   def more?
-    !@_next.nil
+    !@_next.nil?
   end
 
   def next
