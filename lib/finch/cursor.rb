@@ -15,8 +15,12 @@ module Cursor
     klass.extend ClassMethods
   end
 
+  def more?
+    !@_next.nil
+  end
+
   def next
-    raise "No next parameter set" if @_next.nil?
+    raise "No next parameter set" unless more?
     next_params = Finch::Utils::keys_to_sym(
       Rack::Utils.parse_nested_query(@_next.gsub('?','')))
     l = @_last_request
