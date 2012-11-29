@@ -1,6 +1,10 @@
 module Finch
   class Error < StandardError
 
+    class Client     < Error; end
+    class Server     < Error; end
+    class Unexpected < Error; end
+
     RESPONSE_CODES = {
       400 => 'Bad Request',
       401 => 'Unauthorized',
@@ -15,13 +19,7 @@ module Finch
       504 => 'Gateway Timeout'
     }
 
-    class Client < Error; end
-    class Server < Error; end
-
-    class AuthenticationError < Client; end
-
-    def self.[] status
-      name = RESPONSE_CODES[status].gsub(/\s+/, '') || 'UnexpectedError'
+    RESPONSE_CODES.each do |status, msg|
       base = if 400 <= status && status < 500
         Client 
       elsif 500 <= status && status < 600
@@ -29,8 +27,14 @@ module Finch
       else
         Error
       end
-      klass = "Finch::Error::#{name}".constantize rescue 
-        Finch::Error.const_set(name, Class.new(base))
+      Finch::Error.const_set(msg.gsub(/\s+/, ''), Class.new(base))
+    end
+
+    class AuthenticationError < Client; end
+
+    def self.[] status
+      name = RESPONSE_CODES[status].gsub(/\s+/, '') || 'Unexpected'
+      klass = "Finch::Error::#{name}".constantize rescue Finch::Error::Unexpected
       raise klass.new "#{name} (#{status})"
     end
   end
