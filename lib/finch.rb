@@ -6,6 +6,17 @@ require 'finch/cursor'
 require 'finch/errors'
 
 module Finch
+  @@rate_blocks = []
+
+  def self.rate_limit &blk
+    @@rate_blocks << blk
+  end
+  
+  def self._run_rate_limit(remaining,total,user,path)
+    @@rate_blocks.each do |blk|
+      blk.call(remaining,total,user,path) if blk.respond_to?(:call)
+    end
+  end
 
   def self.[] user
     Finch::Client.new user
@@ -13,7 +24,7 @@ module Finch
 
   class Client
     include Cursor
-
+    
     def initialize user
       @user        = user
       @credentials = user.credentials
@@ -27,7 +38,7 @@ module Finch
     def rate_limit &block
       @rate_limit = block
     end
-
+    
     def get path, params={}, options={}
       request :get, path, params, options
     end
@@ -65,16 +76,22 @@ module Finch
       end
 
       raise Finch::Error[response_status] unless response_status == 200
-      check_rate_limit(response_headers) if @rate_limit.respond_to?(:call)
+      
+      check_rate_limit(response_headers,path)
 
       Oj.load @response.body
     end
     use_cursor
 
-    def check_rate_limit headers
+    def check_rate_limit headers, path
       return unless headers.include? 'x-rate-limit-remaining'
       remaining, total = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i
-      @rate_limit.call(remaining, total, @user)
+      
+      if @rate_limit.respond_to?(:call)
+        @rate_limit.call(remaining, total, @user, path)
+      end
+      
+      Finch._run_rate_limit(remaining,total,@user,path)
     end
   end
 
