@@ -75,7 +75,9 @@ module Finch
         request.params.update params
       end
 
-      raise Finch::Error[response_status] unless response_status == 200
+      if response_status != 200
+        raise Finch::Error[response_status].new(response_headers)
+      end
       
       check_rate_limit(response_headers,path)
 

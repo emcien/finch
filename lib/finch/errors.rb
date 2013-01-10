@@ -18,6 +18,8 @@ module Finch
       503 => 'Service Unavailable',
       504 => 'Gateway Timeout'
     }
+    
+    REV_CODES = RESPONSE_CODES.inject({}) { |h,(k,v)| h[ v.gsub(/\s+/, '') ] = k; h }
 
     RESPONSE_CODES.each do |status, msg|
       base = if 400 <= status && status < 500
@@ -31,11 +33,24 @@ module Finch
     end
 
     class AuthenticationError < Client; end
+    
+    def initialize(headers={})
+      @status = self.class.name.match(/::([^:]+)$/)[1]
+      @text   = RESPONSE_CODES[ @status ]
+
+      super "#{@text} (#{@status})"
+      
+      @headers = headers
+    end
+    
+    def headers
+      @headers
+    end
 
     def self.[] status
       name = RESPONSE_CODES[status].gsub(/\s+/, '') || 'Unexpected'
       klass = "Finch::Error::#{name}".constantize rescue Finch::Error::Unexpected
-      raise klass.new "#{name} (#{status})"
+      return klass      
     end
   end
 
