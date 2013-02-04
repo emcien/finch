@@ -12,9 +12,9 @@ module Finch
     @@rate_blocks << blk
   end
   
-  def self._run_rate_limit(remaining,total,user,path)
+  def self._run_rate_limit(remaining,total,user,path,resets)
     @@rate_blocks.each do |blk|
-      blk.call(remaining,total,user,path) if blk.respond_to?(:call)
+      blk.call(remaining,total,user,path,resets) if blk.respond_to?(:call)
     end
   end
 
@@ -87,13 +87,20 @@ module Finch
 
     def check_rate_limit headers, path
       return unless headers.include? 'x-rate-limit-remaining'
-      remaining, total = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i
+      remaining, total, reset = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i, headers['x-rate-limit-reset'].to_i
       
-      if @rate_limit.respond_to?(:call)
-        @rate_limit.call(remaining, total, @user, path)
+      # try to convert reset to time
+      begin
+        reset = Time.at(reset)
+      rescue TypeError
+        reset = nil
       end
       
-      Finch._run_rate_limit(remaining,total,@user,path)
+      if @rate_limit.respond_to?(:call)
+        @rate_limit.call(remaining, total, @user, path, reset)
+      end
+      
+      Finch._run_rate_limit(remaining,total,@user,path, reset)
     end
   end
 
