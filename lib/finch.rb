@@ -72,6 +72,10 @@ module Finch
       uri       = "https://api.twitter.com/#{version}/#{path}.json"
       auth      = auth_headers method, uri, params
       @response = connection.run_request(method, uri, nil, authorization: auth) do |request|
+        request.options = {
+          :timeout      => 10,
+          :open_timeout => 5
+        }
         request.params.update params
       end
 
