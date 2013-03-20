@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'faraday', '~> 0.8'
+  spec.add_dependency 'excon', '~> 0.20'
   spec.add_dependency 'simple_oauth', '~> 0.1'
   spec.add_dependency 'oj', '~> 1.4'
   spec.add_dependency 'rack'

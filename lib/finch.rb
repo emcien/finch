@@ -58,7 +58,9 @@ module Finch
     private
 
     def connection
-      @_connection ||= Faraday.new('https://api.twitter.com')
+      @_connection ||= Faraday.new('https://api.twitter.com') do |f|
+        f.adapter :excon
+      end
     end
 
     def auth_headers method, uri, params
