@@ -1,6 +1,8 @@
 Finch
 =====
 
+[![Code Climate](https://codeclimate.com/github/emcien/finch.png)](https://codeclimate.com/github/emcien/finch)
+
 Finch is a (very) lightweight wrapper for the Twitter 1.1 API. Finch is intended
 primarily to provide the following features:
 * Transparent handling of user-authenticated requests
