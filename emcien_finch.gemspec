@@ -1,12 +1,12 @@
 Gem::Specification.new do |spec|
-  spec.name          = 'finch'
-  spec.version       = '0.0.0'
-  spec.date          = '2012-11-13'
+  spec.name          = 'emcien_finch'
+  spec.version       = '0.0.1'
+  spec.date          = Time.now.utc.strftime("%Y-%m-%d")
   spec.description   = 'A lightweight wrapper for the Twitter API 1.1'
   spec.summary       = spec.description
   spec.authors       = ['James Dabbs']
   spec.email         = 'jdabbs@emcien.com'
-  spec.files         = %w(README.md finch.gemspec)
+  spec.files         = %w(README.md emcien_finch.gemspec)
   spec.files        += Dir.glob('lib/**/*.rb')
   spec.require_paths = ['lib']
 
