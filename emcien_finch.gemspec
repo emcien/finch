@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = 'emcien_finch'
-  spec.version       = '0.0.1'
+  spec.version       = '0.0.2'
   spec.date          = Time.now.utc.strftime("%Y-%m-%d")
   spec.description   = 'A lightweight wrapper for the Twitter API 1.1'
   spec.summary       = spec.description

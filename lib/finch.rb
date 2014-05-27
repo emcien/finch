@@ -11,7 +11,7 @@ module Finch
   def self.rate_limit &blk
     @@rate_blocks << blk
   end
-  
+
   def self._run_rate_limit(remaining,total,user,path,resets)
     @@rate_blocks.each do |blk|
       blk.call(remaining,total,user,path,resets) if blk.respond_to?(:call)
@@ -24,7 +24,7 @@ module Finch
 
   class Client
     include Cursor
-    
+
     def initialize user
       @user        = user
       @credentials = user.credentials
@@ -38,7 +38,7 @@ module Finch
     def rate_limit &block
       @rate_limit = block
     end
-    
+
     def get path, params={}, options={}
       request :get, path, params, options
     end
@@ -84,28 +84,35 @@ module Finch
       if response_status != 200
         raise Finch::Error[response_status].new(response_headers)
       end
-      
+
       check_rate_limit(response_headers,path)
 
-      Oj.load @response.body
+      begin
+        Oj.load @response.body
+      rescue Oj::ParseError => e
+        err = Finch::Error::ParseError.new e.message
+        err.original_error = e
+        err.original_data  = @response.body
+        raise err
+      end
     end
     use_cursor
 
     def check_rate_limit headers, path
       return unless headers.include? 'x-rate-limit-remaining'
       remaining, total, reset = headers['x-rate-limit-remaining'].to_i, headers['x-rate-limit-limit'].to_i, headers['x-rate-limit-reset'].to_i
-      
+
       # try to convert reset to time
       begin
         reset = Time.at(reset)
       rescue TypeError
         reset = nil
       end
-      
+
       if @rate_limit.respond_to?(:call)
         @rate_limit.call(remaining, total, @user, path, reset)
       end
-      
+
       Finch._run_rate_limit(remaining,total,@user,path, reset)
     end
   end
